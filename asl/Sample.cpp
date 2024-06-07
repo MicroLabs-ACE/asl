@@ -30,7 +30,6 @@ int init_module() {
 }
 
 int capture_frame(Frame* newFrame) {
-
   if (newFrame == nullptr) {
     return -1;
   }

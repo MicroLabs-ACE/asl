@@ -7,6 +7,7 @@
 #include "tensorflow/lite/schema/schema_generated.h"
 
 #include "model.h"
+#include "Sample.h"
 
 namespace {
 tflite::ErrorReporter* error_reporter = nullptr;
