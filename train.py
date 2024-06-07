@@ -54,7 +54,7 @@ model = tf.keras.Sequential(
         tf.keras.layers.Dense(8, activation="relu"),
         tf.keras.layers.Dense(8, activation="relu"),
         tf.keras.layers.Dense(8, activation="relu"),
-        tf.keras.layers.Dense(4, activation="softmax"),  # 3 classes for Iris dataset
+        tf.keras.layers.Dense(4, activation="softmax"),
     ]
 )
 
