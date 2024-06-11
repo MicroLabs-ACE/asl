@@ -23,6 +23,8 @@ uint8_t tensor_arena[kTensorArenaSize];
 const uint8_t number_of_frames = 10;
 const uint8_t frames_per_second = 10;
 
+int max_i;
+
 void setup() {
   Serial.begin(115200);
 
@@ -50,6 +52,16 @@ void setup() {
   output = interpreter->output(0);
 }
 
+void max_index(float arr[], int size) {
+  float max_value = -1.0;
+  max_i = -1;
+  for (int i = 0; i < size; i++) {
+    if (arr[i] > max_value) {
+      max_i = i;
+      max_value = arr[i];
+    }
+  }
+}
 
 void loop() {
   Frame frames[number_of_frames];
@@ -65,28 +77,31 @@ void loop() {
     Serial.print(", ");
     Serial.print(frames->pinky);
     Serial.print(": ");
-  }
 
-  TfLiteStatus invoke_status = interpreter->Invoke();
-  if (invoke_status != kTfLiteOk) {
-    Serial.println("Error occured in invoking interpreter.");
-    return;
-  }
+    TfLiteStatus invoke_status = interpreter->Invoke();
+    if (invoke_status != kTfLiteOk) {
+      Serial.println("Error occured in invoking interpreter.");
+      return;
+    }
 
-  if (output->data.f[0] == 1.0) {
-    Serial.print("B");
-  } else if (output->data.f[1] == 1.0) {
-    Serial.print("C");
-  } else if (output->data.f[2] == 1.0) {
-    Serial.print("D");
-  } else if (output->data.f[3] == 1.0) {
-    Serial.print("L");
-  } else if (output->data.f[4] == 1.0) {
-    Serial.print("Y");
-  }
+    float output_array[] = { output->data.f[0], output->data.f[1], output->data.f[2], output->data.f[3], output->data.f[4] };
+    max_index(output_array, 5);
 
-  Serial.println();
-  Serial.println();
+    if (max_i == 0) {
+      Serial.print("B");
+    } else if (max_i == 1) {
+      Serial.print("C");
+    } else if (max_i == 2) {
+      Serial.print("D");
+    } else if (max_i == 3) {
+      Serial.print("L");
+    } else if (max_i == 4) {
+      Serial.print("Y");
+    }
+
+    Serial.println();
+    Serial.println();
+  }
 
   delay(2000);
 }
