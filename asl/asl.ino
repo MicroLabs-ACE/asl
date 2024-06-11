@@ -15,10 +15,13 @@ const tflite::Model* model = nullptr;
 tflite::MicroInterpreter* interpreter = nullptr;
 TfLiteTensor* input = nullptr;
 TfLiteTensor* output = nullptr;
-constexpr int kTensorArenaSize = 3 * 1024;
+constexpr int kTensorArenaSize = 6 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
 }
 
+// Constants
+const uint8_t number_of_frames = 10;
+const uint8_t frames_per_second = 10;
 
 void setup() {
   Serial.begin(115200);
@@ -47,49 +50,43 @@ void setup() {
   output = interpreter->output(0);
 }
 
-int splitString(String data, char delimiter, String* parts) {
-  int delimiterIndex = data.indexOf(delimiter);
-
-  if (delimiterIndex == -1) return 0;
-  else {
-    parts[0] = data.substring(0, delimiterIndex);
-    parts[1] = data.substring(delimiterIndex + 1);
-
-    return 2;
-  }
-}
 
 void loop() {
-  if (Serial.available() > 0) {
-    String data = Serial.readStringUntil('\n');
-    String parts[2];
+  Frame frames[number_of_frames];
 
-    int count = splitString(data, ',', parts);
-    if (count == 2) {
-      Serial.print(parts[0]);
-      Serial.print(", ");
-      Serial.println(parts[1]);
-    } else {
-      Serial.println("Invalid input. Please provide two comma-separated values.");
-    }
+  if (capture_sequence(frames, number_of_frames, frames_per_second) == 0) {
+    input->data.f[0] = (float)frames->thumb;
+    input->data.f[1] = (float)frames->index;
+    input->data.f[2] = (float)frames->pinky;
 
-    input->data.f[0] = parts[0].toFloat();
-    input->data.f[1] = parts[1].toFloat();
-
-    TfLiteStatus invoke_status = interpreter->Invoke();
-    if (invoke_status != kTfLiteOk) {
-      Serial.println("Error occured in invoking interpreter.");
-      return;
-    }
-
-    Serial.print(output->data.f[0]);
-    Serial.print(" ");
-    Serial.print(output->data.f[1]);
-    Serial.print(" ");
-    Serial.print(output->data.f[2]);
-    Serial.print(" ");
-    Serial.print(output->data.f[3]);
-    Serial.println();
-    Serial.println();
+    Serial.print(frames->thumb);
+    Serial.print(", ");
+    Serial.print(frames->index);
+    Serial.print(", ");
+    Serial.print(frames->pinky);
+    Serial.print(": ");
   }
+
+  TfLiteStatus invoke_status = interpreter->Invoke();
+  if (invoke_status != kTfLiteOk) {
+    Serial.println("Error occured in invoking interpreter.");
+    return;
+  }
+
+  if (output->data.f[0] == 1.0) {
+    Serial.print("B");
+  } else if (output->data.f[1] == 1.0) {
+    Serial.print("C");
+  } else if (output->data.f[2] == 1.0) {
+    Serial.print("D");
+  } else if (output->data.f[3] == 1.0) {
+    Serial.print("L");
+  } else if (output->data.f[4] == 1.0) {
+    Serial.print("Y");
+  }
+
+  Serial.println();
+  Serial.println();
+
+  delay(2000);
 }
