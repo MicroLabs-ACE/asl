@@ -22,9 +22,8 @@ uint8_t tensor_arena[kTensorArenaSize];
 // Constants and variables
 const char labels[] = { 'B', 'C', 'D', 'L', 'Y', '\0' };
 const uint8_t frames_per_second = 10;
-const uint8_t number_of_labels = 5;
 const uint8_t number_of_frames = 10;
-const uint8_t number_of_labels = 5;
+const uint8_t number_of_labels = sizeof(labels) / sizeof(char);
 int max_i;
 
 void setup() {
@@ -71,6 +70,10 @@ void loop() {
     Serial.print(frames->thumb);
     Serial.print(", ");
     Serial.print(frames->index);
+    Serial.print(", ");
+    Serial.print(frames->middle);
+    Serial.print(", ");
+    Serial.print(frames->ring);
     Serial.print(", ");
     Serial.print(frames->pinky);
     Serial.print(": ");
