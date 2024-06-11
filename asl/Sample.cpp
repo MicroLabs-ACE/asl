@@ -1,14 +1,19 @@
 #include "Sample.h"
 
+const uint8_t thumbPin = 32;
+const uint8_t indexPin = 33;
+const uint8_t middlePin = 25;
+const uint8_t ringPin = 26;
+const uint8_t pinkyPin = 27;
 
-int capture_frame(Frame* newFrame) {
-  if (newFrame == nullptr) { return -1; }
+int capture_frame(Frame* frame) {
+  if (frame == nullptr) { return -1; }
 
-  newFrame->thumb = map(analogRead(36), 0, 4095, 0, 100);
-  newFrame->index = map(analogRead(39), 0, 4095, 0, 100);
-  newFrame->middle = map(analogRead(34), 0, 4095, 0, 100);
-  newFrame->ring = map(analogRead(35), 0, 4095, 0, 100);
-  newFrame->pinky = map(analogRead(32), 0, 4095, 0, 100);
+  frame->thumb = analogRead(thumbPin);
+  frame->index = analogRead(indexPin);
+  frame->middle = analogRead(middlePin);
+  frame->ring = analogRead(ringPin);
+  frame->pinky = analogRead(pinkyPin);
 
   return 0;
 }
