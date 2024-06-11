@@ -10,62 +10,59 @@
 #include "Sample.h"
 
 namespace {
-tflite::ErrorReporter* error_reporter = nullptr;
-const tflite::Model* model = nullptr;
-tflite::MicroInterpreter* interpreter = nullptr;
-TfLiteTensor* input = nullptr;
-TfLiteTensor* output = nullptr;
+tflite::ErrorReporter *error_reporter = nullptr;
+const tflite::Model *model = nullptr;
+tflite::MicroInterpreter *interpreter = nullptr;
+TfLiteTensor *input = nullptr;
+TfLiteTensor *output = nullptr;
 constexpr int kTensorArenaSize = 6 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
 }
 
-// Constants
-const uint8_t number_of_frames = 10;
+// Constants and variables
+const char labels[] = { 'B', 'C', 'D', 'L', 'Y', '\0' };
 const uint8_t frames_per_second = 10;
-
+const uint8_t number_of_labels = 5;
+const uint8_t number_of_frames = 10;
+const uint8_t number_of_labels = 5;
 int max_i;
 
 void setup() {
   Serial.begin(115200);
 
+  // Model setup
   static tflite::MicroErrorReporter micro_error_reporter;
   error_reporter = &micro_error_reporter;
-
   model = tflite::GetModel(model_tflite);
   if (model->version() != TFLITE_SCHEMA_VERSION) {
     TF_LITE_REPORT_ERROR(error_reporter, "Model provided is schema version %d not equal to supported version %d.", model->version(), TFLITE_SCHEMA_VERSION);
     return;
   }
-
   static tflite::AllOpsResolver resolver;
-
   static tflite::MicroInterpreter static_interpreter(model, resolver, tensor_arena, kTensorArenaSize, error_reporter);
   interpreter = &static_interpreter;
-
   TfLiteStatus allocate_status = interpreter->AllocateTensors();
   if (allocate_status != kTfLiteOk) {
     TF_LITE_REPORT_ERROR(error_reporter, "AllocateTensors() failed");
     return;
   }
-
   input = interpreter->input(0);
   output = interpreter->output(0);
 }
 
-void max_index(float arr[], int size) {
+void max_index(float array[], int length) {
   float max_value = -1.0;
   max_i = -1;
-  for (int i = 0; i < size; i++) {
-    if (arr[i] > max_value) {
+  for (int i = 0; i < length; i++) {
+    if (array[i] > max_value) {
       max_i = i;
-      max_value = arr[i];
+      max_value = array[i];
     }
   }
 }
 
 void loop() {
   Frame frames[number_of_frames];
-
   if (capture_sequence(frames, number_of_frames, frames_per_second) == 0) {
     input->data.f[0] = (float)frames->thumb;
     input->data.f[1] = (float)frames->index;
@@ -80,26 +77,17 @@ void loop() {
 
     TfLiteStatus invoke_status = interpreter->Invoke();
     if (invoke_status != kTfLiteOk) {
-      Serial.println("Error occured in invoking interpreter.");
+      Serial.println("Error occurred in invoking interpreter.");
       return;
     }
 
-    float output_array[] = { output->data.f[0], output->data.f[1], output->data.f[2], output->data.f[3], output->data.f[4] };
-    max_index(output_array, 5);
-
-    if (max_i == 0) {
-      Serial.print("B");
-    } else if (max_i == 1) {
-      Serial.print("C");
-    } else if (max_i == 2) {
-      Serial.print("D");
-    } else if (max_i == 3) {
-      Serial.print("L");
-    } else if (max_i == 4) {
-      Serial.print("Y");
+    float output_array[number_of_labels];
+    for (int i = 0; i < number_of_labels; i++) {
+      output_array[i] = output->data.f[i];
     }
 
-    Serial.println();
+    max_index(output_array, number_of_labels);
+    Serial.println(labels[max_i]);
     Serial.println();
   }
 
