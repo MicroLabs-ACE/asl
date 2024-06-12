@@ -8,8 +8,8 @@ const uint8_t middlePin = 25;
 const uint8_t ringPin = 26;
 const uint8_t pinkyPin = 27;
 
-static const uint8_t PIN_MP3_TX = 26;
-static const uint8_t PIN_MP3_RX = 27;
+static const uint8_t PIN_MP3_TX = 19;
+static const uint8_t PIN_MP3_RX = 18;
 
 DFRobotDFPlayerMini myDFPlayer;
 

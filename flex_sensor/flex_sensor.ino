@@ -1,7 +1,7 @@
-const uint8_t thumbPin = 32;
+const uint8_t thumbPin = 35;
 const uint8_t indexPin = 33;
-const uint8_t middlePin = 25;
-const uint8_t ringPin = 26;
+const uint8_t middlePin = 26;
+const uint8_t ringPin = 25;
 const uint8_t pinkyPin = 27;
 
 void setup() {

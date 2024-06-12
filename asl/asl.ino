@@ -1,3 +1,4 @@
+#include <DFRobotDFPlayerMini.h>
 #include <TensorFlowLite_ESP32.h>
 
 #include "tensorflow/lite/experimental/micro/kernels/all_ops_resolver.h"
@@ -19,19 +20,46 @@ constexpr int kTensorArenaSize = 6 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
 }
 
-// Constants and variables
-const char labels[] = { 'B', 'C', 'D', 'L', 'Y', '\0' };
+// Flex sensor constants and variables
+const uint8_t thumbPin = 35;
+const uint8_t indexPin = 33;
+const uint8_t middlePin = 26;
+const uint8_t ringPin = 25;
+const uint8_t pinkyPin = 27;
+
+float thumbValue;
+float indexValue;
+float middleValue;
+float ringValue;
+float pinkyValue;
+
+// Model constants and variables
+const char labels[] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' };
 const uint8_t frames_per_second = 10;
 const uint8_t number_of_frames = 10;
 const uint8_t number_of_labels = sizeof(labels) / sizeof(char);
-const uint8_t volume = 30;
+
 int max_i;
+
+// MP3 constants and variables
+const uint8_t volume = 30;
+static const uint8_t PIN_MP3_TX = 19;
+static const uint8_t PIN_MP3_RX = 18;
+
+DFRobotDFPlayerMini myDFPlayer;
 
 void setup() {
   Serial.begin(115200);
-  init_module();
 
-  // Model setup
+  // MP3 player
+  Serial1.begin(9600, SERIAL_8N1, PIN_MP3_RX, PIN_MP3_TX);
+  if (!myDFPlayer.begin(Serial1, /*isACK = */ true, /*doReset = */ true)) {
+    return -2;
+  }
+  myDFPlayer.setTimeOut(500);
+  myDFPlayer.EQ(DFPLAYER_EQ_NORMAL);
+
+  // Model
   static tflite::MicroErrorReporter micro_error_reporter;
   error_reporter = &micro_error_reporter;
   model = tflite::GetModel(model_tflite);
@@ -53,6 +81,13 @@ void setup() {
 
   input = interpreter->input(0);
   output = interpreter->output(0);
+
+  // Flex sensors
+  pinMode(thumbPin, INPUT);
+  pinMode(indexPin, INPUT);
+  pinMode(middlePin, INPUT);
+  pinMode(ringPin, INPUT);
+  pinMode(pinkyPin, INPUT);
 }
 
 void max_index(float array[], int length) {
@@ -66,42 +101,51 @@ void max_index(float array[], int length) {
   }
 }
 
+void get_sensor_data() {
+  thumbValue = float(analogRead(thumbPin));
+  indexValue = float(analogRead(indexPin));
+  middleValue = float(analogRead(middlePin));
+  ringValue = float(analogRead(ringPin));
+  pinkyValue = float(analogRead(pinkyPin));
+}
+
 void loop() {
-  Frame frames[number_of_frames];
-  if (capture_sequence(frames, number_of_frames, frames_per_second) == 0) {
-    input->data.f[0] = (float)frames->thumb;
-    input->data.f[1] = (float)frames->index;
-    input->data.f[2] = (float)frames->pinky;
+  get_sensor_data();
 
-    Serial.print(frames->thumb);
-    Serial.print(", ");
-    Serial.print(frames->index);
-    Serial.print(", ");
-    Serial.print(frames->middle);
-    Serial.print(", ");
-    Serial.print(frames->ring);
-    Serial.print(", ");
-    Serial.print(frames->pinky);
-    Serial.print(": ");
+  input->data.f[0] = thumbValue;
+  input->data.f[1] = indexValue;
+  input->data.f[2] = middleValue;
+  input->data.f[3] = ringValue;
+  input->data.f[4] = pinkyValue;
 
-    TfLiteStatus invoke_status = interpreter->Invoke();
-    if (invoke_status != kTfLiteOk) {
-      Serial.println("Error occurred in invoking interpreter.");
-      return;
-    }
+  Serial.print(thumbValue);
+  Serial.print(", ");
+  Serial.print(indexValue);
+  Serial.print(", ");
+  Serial.print(middleValue);
+  Serial.print(", ");
+  Serial.print(ringValue);
+  Serial.print(", ");
+  Serial.print(pinkyValue);
+  Serial.print(": ");
 
-    float output_array[number_of_labels];
-    for (int i = 0; i < number_of_labels; i++) {
-      output_array[i] = output->data.f[i];
-    }
-
-    max_index(output_array, number_of_labels);
-    String detected_character = String(labels[max_i]);
-    play_word(detected_character, volume);
-
-    Serial.println(labels[max_i]);
-    Serial.println();
+  TfLiteStatus invoke_status = interpreter->Invoke();
+  if (invoke_status != kTfLiteOk) {
+    Serial.println("Error occurred in invoking interpreter.");
+    return;
   }
+
+  float output_array[number_of_labels];
+  for (int i = 0; i < number_of_labels; i++) {
+    output_array[i] = output->data.f[i];
+  }
+
+  max_index(output_array, number_of_labels);
+  String detected_character = String(labels[max_i]);
+  play_word(detected_character, volume);
+
+  Serial.println(labels[max_i]);
+  Serial.println();
 
   delay(2000);
 }
