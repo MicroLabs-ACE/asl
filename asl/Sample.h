@@ -14,6 +14,6 @@ typedef struct Frame {
 int init_module();
 int capture_frame(Frame* frame);
 int capture_sequence(Frame* frames, int number_of_frames, int frames_per_second);
-int play_word(String detected_word);
+int play_word(String detected_word, int volume);
 
 #endif

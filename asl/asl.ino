@@ -24,8 +24,8 @@ const char labels[] = { 'B', 'C', 'D', 'L', 'Y', '\0' };
 const uint8_t frames_per_second = 10;
 const uint8_t number_of_frames = 10;
 const uint8_t number_of_labels = sizeof(labels) / sizeof(char);
+const uint8_t volume = 30;
 int max_i;
-
 
 void setup() {
   Serial.begin(115200);
@@ -96,8 +96,10 @@ void loop() {
     }
 
     max_index(output_array, number_of_labels);
+    String detected_character = String(labels[max_i]);
+    play_word(detected_character, volume);
+
     Serial.println(labels[max_i]);
-    play_word(labels[max_i]);
     Serial.println();
   }
 
