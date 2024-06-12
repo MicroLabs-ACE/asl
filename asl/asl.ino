@@ -10,6 +10,14 @@
 #include "model.h"
 #include "Sample.h"
 
+#if (defined(ARDUINO_AVR_UNO) || defined(ESP8266))  // Using a soft serial port
+#include <SoftwareSerial.h>
+SoftwareSerial softSerial(/*rx =*/4, /*tx =*/5n);
+#define FPSerial softSerial
+#else
+#define FPSerial Serial2
+#endif
+
 namespace {
 tflite::ErrorReporter *error_reporter = nullptr;
 const tflite::Model *model = nullptr;
@@ -43,21 +51,25 @@ int max_i;
 
 // MP3 constants and variables
 const uint8_t volume = 30;
-static const uint8_t PIN_MP3_TX = 19;
-static const uint8_t PIN_MP3_RX = 18;
+static const uint8_t PIN_MP3_TX = 16;
+static const uint8_t PIN_MP3_RX = 17;
 
 DFRobotDFPlayerMini myDFPlayer;
 
 void setup() {
   Serial.begin(115200);
 
-  // MP3 player
-  Serial1.begin(9600, SERIAL_8N1, PIN_MP3_RX, PIN_MP3_TX);
-  if (!myDFPlayer.begin(Serial1, /*isACK = */ true, /*doReset = */ true)) {
-    return -2;
+// MP3 player
+#if (defined ESP32)
+  FPSerial.begin(9600, SERIAL_8N1, /*rx =*/PIN_MP3_RX, /*tx =*/PIN_MP3_TX);
+#else
+  FPSerial.begin(9600);
+#endif
+
+  if (!myDFPlayer.begin(FPSerial, /*isACK = */ true, /*doReset = */ true)) {
+    while (true) { delay(0); }
+    myDFPlayer.volume(volume);
   }
-  myDFPlayer.setTimeOut(500);
-  myDFPlayer.EQ(DFPLAYER_EQ_NORMAL);
 
   // Model
   static tflite::MicroErrorReporter micro_error_reporter;
@@ -145,6 +157,7 @@ void loop() {
   play_word(detected_character, volume);
 
   Serial.println(labels[max_i]);
+  myDFPlayer.play((max_i * 2) + 1);
   Serial.println();
 
   delay(2000);
