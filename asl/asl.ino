@@ -1,5 +1,14 @@
-#include <DFRobotDFPlayerMini.h>
 #include <TensorFlowLite_ESP32.h>
+#include "Arduino.h"
+#include "DFRobotDFPlayerMini.h"
+
+#if (defined(ARDUINO_AVR_UNO) || defined(ESP8266))  // Using a soft serial port
+#include <SoftwareSerial.h>
+SoftwareSerial softSerial(/*rx =*/4, /*tx =*/5);
+#define FPSerial softSerial
+#else
+#define FPSerial Serial2
+#endif
 
 #include "tensorflow/lite/experimental/micro/kernels/all_ops_resolver.h"
 #include "tensorflow/lite/experimental/micro/micro_error_reporter.h"
@@ -8,15 +17,6 @@
 #include "tensorflow/lite/version.h"
 
 #include "model.h"
-#include "Sample.h"
-
-#if (defined(ARDUINO_AVR_UNO) || defined(ESP8266))  // Using a soft serial port
-#include <SoftwareSerial.h>
-SoftwareSerial softSerial(/*rx =*/4, /*tx =*/5n);
-#define FPSerial softSerial
-#else
-#define FPSerial Serial2
-#endif
 
 namespace {
 tflite::ErrorReporter *error_reporter = nullptr;
@@ -24,7 +24,7 @@ const tflite::Model *model = nullptr;
 tflite::MicroInterpreter *interpreter = nullptr;
 TfLiteTensor *input = nullptr;
 TfLiteTensor *output = nullptr;
-constexpr int kTensorArenaSize = 6 * 1024;
+constexpr int kTensorArenaSize = 48 * 1024;
 uint8_t tensor_arena[kTensorArenaSize];
 }
 
@@ -51,25 +51,24 @@ int max_i;
 
 // MP3 constants and variables
 const uint8_t volume = 30;
-static const uint8_t PIN_MP3_TX = 16;
-static const uint8_t PIN_MP3_RX = 17;
 
 DFRobotDFPlayerMini myDFPlayer;
 
 void setup() {
-  Serial.begin(115200);
-
 // MP3 player
 #if (defined ESP32)
-  FPSerial.begin(9600, SERIAL_8N1, /*rx =*/PIN_MP3_RX, /*tx =*/PIN_MP3_TX);
+  FPSerial.begin(9600, SERIAL_8N1, /*rx =*/16, /*tx =*/17);
 #else
   FPSerial.begin(9600);
 #endif
 
+  Serial.begin(115200);
+
   if (!myDFPlayer.begin(FPSerial, /*isACK = */ true, /*doReset = */ true)) {
+    Serial.println(F("Unable to begin."));
     while (true) { delay(0); }
-    myDFPlayer.volume(volume);
   }
+  myDFPlayer.volume(volume);
 
   // Model
   static tflite::MicroErrorReporter micro_error_reporter;
@@ -114,14 +113,21 @@ void max_index(float array[], int length) {
 }
 
 void get_sensor_data() {
-  thumbValue = float(analogRead(thumbPin));
-  indexValue = float(analogRead(indexPin));
-  middleValue = float(analogRead(middlePin));
-  ringValue = float(analogRead(ringPin));
-  pinkyValue = float(analogRead(pinkyPin));
+  // thumbValue = float(analogRead(thumbPin));
+  // indexValue = float(analogRead(indexPin));
+  // middleValue = float(analogRead(middlePin));
+  // ringValue = float(analogRead(ringPin));
+  // pinkyValue = float(analogRead(pinkyPin));
+
+  thumbValue = float(random(0, 100));
+  indexValue = float(random(0, 100));
+  middleValue = float(random(0, 100));
+  ringValue = float(random(0, 100));
+  pinkyValue = float(random(0, 100));
 }
 
 void loop() {
+  Serial.println("Got here.");
   get_sensor_data();
 
   input->data.f[0] = thumbValue;
@@ -153,12 +159,9 @@ void loop() {
   }
 
   max_index(output_array, number_of_labels);
-  String detected_character = String(labels[max_i]);
-  play_word(detected_character, volume);
-
   Serial.println(labels[max_i]);
-  myDFPlayer.play((max_i * 2) + 1);
   Serial.println();
+  myDFPlayer.play((max_i * 2) + 1);
 
-  delay(2000);
+  delay(2500);
 }

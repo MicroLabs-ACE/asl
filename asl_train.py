@@ -31,16 +31,15 @@ X_train, X_test, y_train, y_test = train_test_split(
 model = tf.keras.Sequential(
     [
         tf.keras.Input(shape=(X.shape[1],)),
-        tf.keras.layers.Dense(128, activation="relu"),
-        tf.keras.layers.Dropout(0.4),
-        tf.keras.layers.Dense(128, activation="relu"),
-        tf.keras.layers.Dropout(0.4),
+        tf.keras.layers.Dense(64, activation="relu"),
+        tf.keras.layers.Dense(64, activation="relu"),
+        tf.keras.layers.Dense(64, activation="relu"),
         tf.keras.layers.Dense(y.shape[1], activation="softmax"),
     ]
 )
 
 model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
-model.fit(X_train, y_train, epochs=1000, batch_size=64, verbose=1)
+model.fit(X_train, y_train, epochs=750, batch_size=64, verbose=1)
 loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
 print(f"Test Accuracy: {accuracy}")
 
