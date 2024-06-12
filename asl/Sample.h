@@ -11,7 +11,9 @@ typedef struct Frame {
   uint8_t pinky;
 };
 
-int capture_frame(Frame* newFrame);
+int init_module();
+int capture_frame(Frame* frame);
 int capture_sequence(Frame* frames, int number_of_frames, int frames_per_second);
+int play_word(String detected_word);
 
 #endif

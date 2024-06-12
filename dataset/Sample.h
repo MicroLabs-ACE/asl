@@ -11,7 +11,7 @@ typedef struct Frame {
   uint8_t pinky;
 };
 
-int capture_frame(Frame* newFrame);
+int capture_frame(Frame* frame);
 int capture_sequence(Frame* frames, int number_of_frames, int frames_per_second);
 
 #endif

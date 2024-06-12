@@ -26,8 +26,10 @@ const uint8_t number_of_frames = 10;
 const uint8_t number_of_labels = sizeof(labels) / sizeof(char);
 int max_i;
 
+
 void setup() {
   Serial.begin(115200);
+  init_module();
 
   // Model setup
   static tflite::MicroErrorReporter micro_error_reporter;
@@ -95,6 +97,7 @@ void loop() {
 
     max_index(output_array, number_of_labels);
     Serial.println(labels[max_i]);
+    play_word(labels[max_i]);
     Serial.println();
   }
 
