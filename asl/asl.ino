@@ -119,11 +119,11 @@ void get_sensor_data() {
   ringValue = float(map(analogRead(ringPin), 2700, 4095, 0, 100));
   pinkyValue = float(map(analogRead(pinkyPin), 2700, 4095, 0, 100));
 
-  thumbValue = float(random(0, 100));
-  indexValue = float(random(0, 100));
-  middleValue = float(random(0, 100));
-  ringValue = float(random(0, 100));
-  pinkyValue = float(random(0, 100));
+  // thumbValue = float(random(0, 100));
+  // indexValue = float(random(0, 100));
+  // middleValue = float(random(0, 100));
+  // ringValue = float(random(0, 100));
+  // pinkyValue = float(random(0, 100));
 }
 
 void loop() {
