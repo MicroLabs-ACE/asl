@@ -113,11 +113,11 @@ void max_index(float array[], int length) {
 }
 
 void get_sensor_data() {
-  // thumbValue = float(analogRead(thumbPin));
-  // indexValue = float(analogRead(indexPin));
-  // middleValue = float(analogRead(middlePin));
-  // ringValue = float(analogRead(ringPin));
-  // pinkyValue = float(analogRead(pinkyPin));
+  thumbValue = float(map(analogRead(thumbPin), 2700, 4095, 0, 100));
+  indexValue = float(map(analogRead(indexPin), 2700, 4095, 0, 100));
+  middleValue = float(map(analogRead(middlePin), 2700, 4095, 0, 100));
+  ringValue = float(map(analogRead(ringPin), 2700, 4095, 0, 100));
+  pinkyValue = float(map(analogRead(pinkyPin), 2700, 4095, 0, 100));
 
   thumbValue = float(random(0, 100));
   indexValue = float(random(0, 100));

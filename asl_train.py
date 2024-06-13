@@ -39,7 +39,7 @@ model = tf.keras.Sequential(
 )
 
 model.compile(optimizer="adam", loss="categorical_crossentropy", metrics=["accuracy"])
-model.fit(X_train, y_train, epochs=750, batch_size=64, verbose=1)
+model.fit(X_train, y_train, epochs=200, batch_size=64, verbose=1)
 loss, accuracy = model.evaluate(X_test, y_test, verbose=0)
 print(f"Test Accuracy: {accuracy}")
 
